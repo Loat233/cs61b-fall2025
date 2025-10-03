@@ -1,2 +1,2 @@
-squareNum, seed, addTimes, haveSaved
+squareNum, seed, addTimes
 12,3456,12

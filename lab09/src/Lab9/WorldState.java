@@ -28,7 +28,7 @@ public class WorldState {
 
     public void saveState() {
         Out saveFile = new Out(fileName);
-        saveFile.println("squareNum, seed, addTimes, haveSaved");
+        saveFile.println("squareNum, seed, addTimes");
         String data = String.format("%d,%d,%d", squareNum, seed, addTimes);
         saveFile.println(data);
         saveFile.close();
