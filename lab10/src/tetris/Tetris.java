@@ -5,6 +5,7 @@ import tileengine.TETile;
 import tileengine.TERenderer;
 import tileengine.Tileset;
 
+import java.awt.*;
 import java.util.*;
 
 /**
@@ -84,15 +85,36 @@ public class Tetris {
         // Grabs the current piece.
         Tetromino t = currentTetromino;
         if (actionDeltaTime() > 1000) {
+            System.out.println(1);
             movement.dropDown();
             resetActionTimer();
             Tetromino.draw(t, board, t.pos.x, t.pos.y);
             return;
         }
 
-        // TODO: Implement interactivity, so the user is able to input the keystrokes to move
-        //  the tile and rotate the tile. You'll want to use some provided helper methods here.
+        if (StdDraw.hasNextKeyTyped()) {
+            char input = Character.toLowerCase(StdDraw.nextKeyTyped());
 
+            switch (input) {
+                case 'a':
+                    movement.tryMove(-1, 0);
+                    break;
+                case 's':
+                    movement.tryMove(0, -1);
+                    break;
+                case 'd':
+                    movement.tryMove(1, 0);
+                    break;
+                case 'q':
+                    movement.rotate(Movement.Rotation.LEFT);
+                    break;
+                case 'w':
+                    movement.rotate(Movement.Rotation.RIGHT);
+                    break;
+                default:
+                    break;
+            }
+        }
 
         Tetromino.draw(t, board, t.pos.x, t.pos.y);
     }
@@ -103,8 +125,14 @@ public class Tetris {
      * @param linesCleared
      */
     private void incrementScore(int linesCleared) {
-        // TODO: Increment the score based on the number of lines cleared.
-
+        int gainPoints = switch (linesCleared) {
+            case 1 -> 100;
+            case 2 -> 300;
+            case 3 -> 500;
+            case 4 -> 800;
+            default -> 0;
+        };
+        score += gainPoints;
     }
 
     /**
@@ -116,10 +144,32 @@ public class Tetris {
         // Keeps track of the current number lines cleared
         int linesCleared = 0;
 
-        // TODO: Check how many lines have been completed and clear it the rows if completed.
+        for (int y = 0; y < GAME_HEIGHT; y++) {
+            boolean isCompleted = true;
+            for (int x = 0;x < WIDTH; x++) {
+                if (tiles[x][y].equals(Tileset.NOTHING)) {
+                    isCompleted = false;
+                    break;
+                }
+            }
 
-        // TODO: Increment the score based on the number of lines cleared.
-
+            if (isCompleted) {
+                //将该行以上的所有行下移
+                for (int cpY = y; cpY < GAME_HEIGHT - 1; cpY++) {
+                    for (int x = 0;x < WIDTH; x++) {
+                        tiles[x][cpY] = tiles[x][cpY + 1];
+                    }
+                }
+                //清空顶行
+                for (int x = 0; x < WIDTH; x++) {
+                    tiles[x][GAME_HEIGHT - 1] = Tileset.NOTHING;
+                }
+                linesCleared++;
+                //重新检查替换后的该行是否能clear
+                y--;
+            }
+        }
+        incrementScore(linesCleared);
         fillAux();
     }
 
@@ -129,10 +179,16 @@ public class Tetris {
      */
     public void runGame() {
         resetActionTimer();
+        spawnPiece();
 
-        // TODO: Set up your game loop. The game should keep running until the game is over.
-        // Use helper methods inside your game loop, according to the spec description.
-
+        while (!isGameOver()) {
+            updateBoard();
+            if (currentTetromino == null) {
+                clearLines(board);
+                spawnPiece();
+            }
+            renderBoard();
+        }
 
     }
 
@@ -140,8 +196,9 @@ public class Tetris {
      * Renders the score using the StdDraw library.
      */
     private void renderScore() {
-        // TODO: Use the StdDraw library to draw out the score.
-
+        String text = String.format("Score: %d", getScore());
+        StdDraw.setPenColor(StdDraw.WHITE);
+        StdDraw.text(7, 19,text);
     }
 
     /**
